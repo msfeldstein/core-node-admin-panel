@@ -103,7 +103,7 @@ const ForceGraph = (
 
   const drag = (sim: d3.Simulation<SimNode, SimLink>) => {
     const dragStart = (d: SimNode, i: number) => {
-      if (!d3.event.active) sim.alphaTarget(0.3).restart();
+      if (!d3.event.active) sim.alphaTarget(0.1).restart();
       d.fx = d.x; // fix position to mouse
       d.fy = d.y;
     };

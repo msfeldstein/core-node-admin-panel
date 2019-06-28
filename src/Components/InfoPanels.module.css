@@ -1,0 +1,29 @@
+.Container {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+}
+
+.HeaderRow {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.Title {
+  flex-grow: 1;
+}
+
+.OpenCloseButton {
+  float: right;
+  flex-grow: 0;
+}
+
+.Panel {
+  background: #f2f2f2;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+  padding: 16px;
+  min-height: 32px;
+  margin-top: 16px;
+  width: 320px;
+}

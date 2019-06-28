@@ -37,7 +37,6 @@ const FailureDisplay: FunctionComponent = ({ children }) => {
   };
   return (
     <div className={s.FailurePopup}>
-      <div className={s.FailureTitle}>Failures</div>
       {children}
       <div className={s.Grid}>
         {list.map(failure => {
