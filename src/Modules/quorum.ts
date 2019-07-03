@@ -1,8 +1,9 @@
 import { GraphData } from "../Types/GraphTypes";
 import { NetworkGraphNode } from "../Types/NetworkTypes";
-import dummydata from "../test/data/ServerDefaults";
 import { networkNodesToGraphData } from "../util/QuorumParsing";
 import { haltingAnalysis, HaltingFailure } from "../util/HaltingAnalysis";
+import axios from "axios";
+import { Dispatch } from "redux";
 
 import healthy from "../test/data/HealthyQuorum";
 import highlyDependent from "../test/data/HighlyDependent";
@@ -10,9 +11,8 @@ import { simple as highlyDependentSubquorum } from "../test/data/HighlyDependent
 import halfDead from "../test/data/HalfDead";
 import preHalt from "../test/data/PreHalt";
 
-const networkData = dummydata as { nodes: NetworkGraphNode[] };
-
 type ExampleKey =
+  | "liveData"
   | "healthy"
   | "halfDead"
   | "highlyDependent"
@@ -30,11 +30,20 @@ type Action =
   | { type: "SELECT_NODE"; node: NetworkGraphNode; failures: HaltingFailure[] }
   | { type: "UNKNOWN" };
 
-export function fetchQuorum(): Action {
-  return showExample("preHalt");
+// export const fetchQuorum: ActionCreator<
+//   ThunkAction<Promise<ReduxAction>, IState, void>
+// > = () => {
+export function fetchQuorum() {
+  return async (dispatch: Dispatch) => {
+    const response = await axios.get("http://localhost:8080/quorum");
+    const nodes = response.data.nodes as NetworkGraphNode[];
+    const failures = haltingAnalysis(nodes, { numberOfNodesToTest: 2 });
+    dispatch({ type: "USE_EXAMPLE", name: "actual", data: nodes, failures });
+  };
 }
 
 const examples: Map<ExampleKey, NetworkGraphNode[]> = new Map([
+  ["liveData", []],
   ["healthy", healthy],
   ["halfDead", halfDead],
   ["highlyDependent", highlyDependent],
@@ -42,7 +51,12 @@ const examples: Map<ExampleKey, NetworkGraphNode[]> = new Map([
   ["preHalt", preHalt]
 ]);
 
-export function showExample(example: string): Action {
+export function showExample(
+  example: string
+): Action | ((d: Dispatch) => Promise<void>) {
+  if (example === "liveData") {
+    return fetchQuorum();
+  }
   const nodes = examples.get(example as ExampleKey);
   if (!nodes) {
     throw new Error("Unknown example key");
