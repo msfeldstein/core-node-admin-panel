@@ -6,6 +6,7 @@ import { useDispatch } from "redux-react-hook";
 import { useMappedState } from "redux-react-hook";
 import { GraphData } from "../Types/GraphTypes";
 import { HaltingFailure } from "../util/HaltingAnalysis";
+import { NetworkGraphNode } from "../Types/NetworkTypes";
 
 const NodeGraph = () => {
   const dispatch = useDispatch();
@@ -19,13 +20,15 @@ const NodeGraph = () => {
     return {
       quorum: state.quorum.transitiveQuorum,
       failures: state.quorum.failures,
-      selectedFailure: state.quorum.selectedFailure
+      selectedFailure: state.quorum.selectedFailure,
+      selectedNode: state.quorum.selectedNode
     };
   }, []);
-  const { quorum, selectedFailure } = useMappedState<{
+  const { quorum, selectedFailure, selectedNode } = useMappedState<{
     quorum: GraphData;
     failures: HaltingFailure[];
     selectedFailure?: HaltingFailure;
+    selectedNode?: NetworkGraphNode;
   }>(mapState);
 
   // Update the svg with the new quorum state data
@@ -41,10 +44,10 @@ const NodeGraph = () => {
         "height",
         containerRef.current.offsetHeight + "px"
       );
-
-      ForceGraph(ref.current, quorum, selectedFailure);
+      console.log("SELECTED NODE", selectedNode);
+      ForceGraph(ref.current, quorum, selectedNode, selectedFailure);
     }
-  }, [ref, quorum, selectedFailure]);
+  }, [ref, quorum, selectedNode, selectedFailure]);
 
   return (
     <div style={{ height: "100%" }} ref={containerRef}>

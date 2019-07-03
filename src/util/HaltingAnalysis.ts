@@ -37,9 +37,11 @@ function isNested(set: string | NetworkQuorumSet): set is NetworkQuorumSet {
 // Create the data structure needed for analysis
 // Returns tuple of root node and an array of all nodes
 export function createAnalysisStructure(
-  nodes: NetworkGraphNode[]
+  nodes: NetworkGraphNode[],
+  rootName?: string
 ): { root: AnalysisNode; entries: AnalysisNode[] } {
-  const myNode = nodes.find(n => n.distance === 0);
+  const myNode =
+    nodes.find(n => n.node === rootName) || nodes.find(n => n.distance === 0);
   if (!myNode) {
     throw new Error("No node with distance 0 in halting analysis");
   }
@@ -117,6 +119,10 @@ export function generateCombinations<T>(items: T[], maxSize: number): (T[])[] {
   return results.sort((a, b) => a.length - b.length);
 }
 
+type HaltingAnalysisOptions = {
+  numberOfNodesToTest?: number;
+  rootNode?: string;
+};
 /*
  * Run the halting analysis on a node graph. Iterate through making each node faulty and seeing what quorums
  * it affects, and whether or not it halts your own node.
@@ -125,10 +131,15 @@ export function generateCombinations<T>(items: T[], maxSize: number): (T[])[] {
  */
 export function haltingAnalysis(
   nodes: NetworkGraphNode[],
-  numberOfNodesToTest: number = 1
+  options: HaltingAnalysisOptions = {}
 ): HaltingFailure[] {
+  const numberOfNodesToTest = options.numberOfNodesToTest || 1;
   const failureCases: HaltingFailure[] = [];
-  const { root, entries: analysisNodes } = createAnalysisStructure(nodes);
+
+  const { root, entries: analysisNodes } = createAnalysisStructure(
+    nodes,
+    options.rootNode
+  );
   function getNode(name: string): AnalysisNode {
     return analysisNodes.find(n => n.name === name) as AnalysisNode;
   }

@@ -1,6 +1,7 @@
 import * as d3 from "d3";
 import { GraphData, GraphNode, GraphLink } from "../Types/GraphTypes";
 import { HaltingFailure } from "../util/HaltingAnalysis";
+import { NetworkGraphNode } from "../Types/NetworkTypes";
 
 const SimValues = {
   ManyBodyStrength: -700
@@ -10,7 +11,7 @@ const NodeStyles = {
   radius: 6,
   className: (n: SimNode) => {
     const classes = ["node"];
-    if (n.data.distance === 0) classes.push("self");
+    if (n.self) classes.push("self");
     if (n.vulnerable) classes.push("vulnerable");
     classes.push(n.live ? "live" : "dead");
     return classes.join(" ");
@@ -35,6 +36,7 @@ interface SimNode extends d3.SimulationNodeDatum {
   data: GraphNode;
   live: boolean;
   vulnerable: boolean;
+  self: boolean;
 }
 
 interface SimLink extends d3.SimulationLinkDatum<SimNode> {
@@ -45,6 +47,7 @@ interface SimLink extends d3.SimulationLinkDatum<SimNode> {
 const ForceGraph = (
   el: SVGSVGElement,
   data: GraphData,
+  rootNode?: NetworkGraphNode,
   failure?: HaltingFailure
 ) => {
   if (!data) return;
@@ -79,7 +82,8 @@ const ForceGraph = (
       id: n.id,
       data: n,
       live: true,
-      vulnerable: false
+      vulnerable: false,
+      self: !!(n.node == (rootNode && rootNode.node))
     };
 
     if (failure) {

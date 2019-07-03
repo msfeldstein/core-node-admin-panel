@@ -20,7 +20,6 @@ type ExampleKey =
   | "preHalt";
 
 type Action =
-  | { type: "FETCH_QUORUM" }
   | {
       type: "USE_EXAMPLE";
       name: string;
@@ -28,6 +27,7 @@ type Action =
       failures: HaltingFailure[];
     }
   | { type: "SELECT_FAILURE"; data: HaltingFailure }
+  | { type: "SELECT_NODE"; node: NetworkGraphNode; failures: HaltingFailure[] }
   | { type: "UNKNOWN" };
 
 export function fetchQuorum(): Action {
@@ -47,7 +47,7 @@ export function showExample(example: string): Action {
   if (!nodes) {
     throw new Error("Unknown example key");
   }
-  const failures = haltingAnalysis(nodes, 3);
+  const failures = haltingAnalysis(nodes, { numberOfNodesToTest: 3 });
   return {
     type: "USE_EXAMPLE",
     name: example,
@@ -60,11 +60,22 @@ export function selectFailure(failure: HaltingFailure): Action {
   return { type: "SELECT_FAILURE", data: failure };
 }
 
+export function selectNode(name: string, nodes: NetworkGraphNode[]): Action {
+  const node = nodes.find(n => n.node === name);
+  if (!node) return { type: "UNKNOWN" };
+  const failures = haltingAnalysis(nodes, {
+    numberOfNodesToTest: 3,
+    rootNode: name
+  });
+  return { type: "SELECT_NODE", node, failures };
+}
+
 export type QuorumStateShape = {
   transitiveQuorum: GraphData;
   validExamples: string[];
   failures: HaltingFailure[];
   selectedFailure?: HaltingFailure;
+  selectedNode?: NetworkGraphNode;
 };
 
 export default function reducer(
@@ -86,12 +97,15 @@ export default function reducer(
         transitiveQuorum: networkNodesToGraphData(action.data),
         failures: action.failures,
         exampleName: action.name,
-        selectedFailure: action.failures[0]
+        selectedFailure: action.failures[0],
+        selectedNode: action.data.find(n => n.distance === 0)
       };
-    case "FETCH_QUORUM":
+    case "SELECT_NODE":
       return {
         ...state,
-        transitiveQuorum: networkNodesToGraphData(networkData.nodes)
+        selectedNode: action.node,
+        failures: action.failures,
+        selectedFailure: action.failures[0]
       };
     case "SELECT_FAILURE":
       return {

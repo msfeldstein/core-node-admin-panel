@@ -19,17 +19,17 @@ import {
 
 describe("halting analysis", () => {
   it("must return an empty set for a healthy quorum", () => {
-    const failureCases = haltingAnalysis(healthy, 1);
+    const failureCases = haltingAnalysis(healthy);
     expect(failureCases).toHaveLength(0);
   });
 
   it("must return an empty set for healthy quorums with subquorums", () => {
-    const failureCases = haltingAnalysis(healthySubquorums, 1);
+    const failureCases = haltingAnalysis(healthySubquorums);
     expect(failureCases).toHaveLength(0);
   });
 
   it("must return a node that is too highly depended on", () => {
-    const failureCases = haltingAnalysis(highlyDependent, 1);
+    const failureCases = haltingAnalysis(highlyDependent);
     expect(failureCases).toHaveLength(1);
     expect(failureCases[0].vulnerableNodes[0]).toHaveProperty("node", "e");
     const affected = failureCases[0].affectedNodes.map(n => n.node);
@@ -39,7 +39,9 @@ describe("halting analysis", () => {
   });
 
   it("must not return supersets of existing failure cases", () => {
-    const failureCases = haltingAnalysis(highlyDependent, 2);
+    const failureCases = haltingAnalysis(highlyDependent, {
+      numberOfNodesToTest: 2
+    });
     // Would return 7 if we were returning failure cases with e+something else
     // expect e, b+c, b+d, c+d
     // and filter out e+b, e+c, e+d
@@ -99,7 +101,7 @@ describe("halting analysis", () => {
   });
 
   it("must find failure cases for 2 node vulnerabilities", () => {
-    const fc = haltingAnalysis(twonode, 2);
+    const fc = haltingAnalysis(twonode, { numberOfNodesToTest: 2 });
     expect(fc).toHaveLength(1);
   });
 
@@ -110,7 +112,7 @@ describe("halting analysis", () => {
   });
 
   it("must find failure cases in PreHalt quorums", () => {
-    const fc = haltingAnalysis(prehalt, 2);
+    const fc = haltingAnalysis(prehalt, { numberOfNodesToTest: 2 });
     expect(fc).not.toHaveLength(0);
     const sdfFailureCase = fc.find(failure => {
       return !!failure.vulnerableNodes.find(n => n.node === "SDF_validator_1");
